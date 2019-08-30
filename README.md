@@ -4,5 +4,6 @@ The application is based on the format of the work shifts sheet dispatchers in t
 
 ### Usage
 ```
-python workshifts.py <sheet.xlsx>
+python workshifts.py <sheet.xlsx> -m <mm> -y <yyyy>
 ```
++ **-m** and **-y** specify the month and the year.

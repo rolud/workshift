@@ -1,6 +1,7 @@
 import datetime 
 import pickle
 import os.path
+import sys
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -49,36 +50,67 @@ def auth():
 
     return creds
 
-def worksheet(path):
+def worksheet(input, month, year):
     events = []
-    workbook = xlrd.open_workbook(path)
+    workbook = xlrd.open_workbook(input)
     sheet = workbook.sheet_by_index(0)
+    daycell = -1
     for row in range(sheet.nrows):
         cell = sheet.cell(row,0)
-        if cell.value == "SCARCELLA":
-            break
-    # print(row)
+        if (cell.ctype == 1):
+            if cell.value.upper() == 'COGNOME':
+                daycell = row
+            if cell.value.upper() == "SCARCELLA":
+                break
+    if daycell < 0: 
+        return
+    print(daycell, row)
     for col in range(1,sheet.ncols):
-        y = '2019'
-        m = '08'
-        d = sheet.cell(2,col).value
+        day = int(sheet.cell(daycell,col).value)
         shift = SHIFT[sheet.cell(row,col).value]
         # print(shift)
         if shift in WORKTIME:
             #print(col)
             # print(sheet.cell(2,col).value, 'agosto 2019 -> ', SHIFT[sheet.cell(row,col).value])
             if shift == 'Notte':
-                ed = int(d) + 1
+                if ((month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10) and day == 31):
+                    end_day = 1
+                    end_month = month + 1
+                    end_year = year
+                elif (month == 12 and day == 31):
+                    end_day = 1
+                    end_month = 1
+                    end_year = year + 1
+                elif ((month == 4 or month == 6 or month == 9 or month == 11) and day == 30):
+                    end_day = 1
+                    end_month = month + 1
+                    end_year = year
+                elif (month == 2):
+                    if (year % 4 == 0 and day == 29):
+                        end_day = 1
+                        end_month = month + 1
+                        end_year = year
+                    elif (year % 4 != 0 and day == 28):
+                        end_day = 1
+                        end_month = month + 1
+                        end_year = year
+                else:
+                    end_day = day + 1
+                    end_month = month
+                    end_year = year
             else:
-                ed = int(d)
+                end_day = day
+                end_month = month
+                end_year = year
+            print("{:0>2d}".format(day),"{:0>2d}".format(month),year)
             event = {
                 'summary': shift,
                 'start': {
-                    'dateTime': y + '-' + m + '-' + "{:0>2d}".format(int(d)) + 'T' + WORKTIME[shift]['start'] + '+02:00',
+                    'dateTime': str(year) + '-' + "{:0>2d}".format(month) + '-' + "{:0>2d}".format(day) + 'T' + WORKTIME[shift]['start'] + '+02:00',
                     'timeZone': 'Europe/Rome',
                 },
                 'end' : {
-                    'dateTime': y + '-' + m + '-' + "{:0>2d}".format(ed) + 'T' + WORKTIME[shift]['end'] + '+02:00',
+                    'dateTime': str(end_year) + '-' + "{:0>2d}".format(end_month) + '-' + "{:0>2d}".format(end_day) + 'T' + WORKTIME[shift]['end'] + '+02:00',
                     'timeZone': 'Europe/Rome',
                 },
             }
@@ -87,13 +119,28 @@ def worksheet(path):
 
 def main():
 
-    creds = auth()
-    service = build('calendar', 'v3', credentials = creds)
+    if (len(sys.argv) != 6):
+        print('Error! Usage: python workshift.py <input_file> -m <mm> -y <yyyy>')
+        return
+    script, inputFile, mc, month, yc, year = sys.argv
+    if (mc != '-m' or yc != '-y' or not month.isnumeric() or not year.isnumeric()):
+        print('Error!! Usage: python workshift.py <input_file> -m <mm> -y <yyyy>')
+        return
+    if (int(month) < 1 or int(month) > 12):
+        print('Error! month should be between 1 and 12')
+        return
+    if (int(year) < 2000 or int(year) > 2030):
+        print('Error! Year should be between 2000 and 2030')
+        return
+    # print(sys.argv)
 
-    events = worksheet("Agosto 19.xlsx")
+    # creds = auth()
+    # service = build('calendar', 'v3', credentials = creds)
 
-    for event in events:
-        event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
+    events = worksheet(inputFile, int(month), int(year))
+
+    # for event in events:
+    #    event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
         # print('------------------')
         # print(event['summary'])
         # print(event['start']['dateTime'])
