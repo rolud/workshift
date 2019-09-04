@@ -67,54 +67,58 @@ def worksheet(input, month, year):
     print(daycell, row)
     for col in range(1,sheet.ncols):
         day = int(sheet.cell(daycell,col).value)
-        shift = SHIFT[sheet.cell(row,col).value]
-        # print(shift)
-        if shift in WORKTIME:
-            #print(col)
-            # print(sheet.cell(2,col).value, 'agosto 2019 -> ', SHIFT[sheet.cell(row,col).value])
-            if shift == 'Notte':
-                if ((month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10) and day == 31):
-                    end_day = 1
-                    end_month = month + 1
-                    end_year = year
-                elif (month == 12 and day == 31):
-                    end_day = 1
-                    end_month = 1
-                    end_year = year + 1
-                elif ((month == 4 or month == 6 or month == 9 or month == 11) and day == 30):
-                    end_day = 1
-                    end_month = month + 1
-                    end_year = year
-                elif (month == 2):
-                    if (year % 4 == 0 and day == 29):
+        # print("{:0>2d}".format(day),"{:0>2d}".format(month),year,sheet.cell(row,col).value)
+        # print(shift)        
+        if sheet.cell(row,col).value in SHIFT :
+            shift = SHIFT[sheet.cell(row,col).value]
+            
+            if shift in WORKTIME:
+                # print(col)
+                # print(sheet.cell(2,col).value, 'agosto 2019 -> ', SHIFT[sheet.cell(row,col).value])
+                if shift == 'Notte':
+                    if ((month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10) and day == 31):
                         end_day = 1
                         end_month = month + 1
                         end_year = year
-                    elif (year % 4 != 0 and day == 28):
+                    elif (month == 12 and day == 31):
+                        end_day = 1
+                        end_month = 1
+                        end_year = year + 1
+                    elif ((month == 4 or month == 6 or month == 9 or month == 11) and day == 30):
                         end_day = 1
                         end_month = month + 1
+                        end_year = year
+                    elif (month == 2):
+                        if (year % 4 == 0 and day == 29):
+                            end_day = 1
+                            end_month = month + 1
+                            end_year = year
+                        elif (year % 4 != 0 and day == 28):
+                            end_day = 1
+                            end_month = month + 1
+                            end_year = year
+                    else:
+                        end_day = day + 1
+                        end_month = month
                         end_year = year
                 else:
-                    end_day = day + 1
+                    end_day = day
                     end_month = month
                     end_year = year
-            else:
-                end_day = day
-                end_month = month
-                end_year = year
-            print("{:0>2d}".format(day),"{:0>2d}".format(month),year)
-            event = {
-                'summary': shift,
-                'start': {
-                    'dateTime': str(year) + '-' + "{:0>2d}".format(month) + '-' + "{:0>2d}".format(day) + 'T' + WORKTIME[shift]['start'] + '+02:00',
-                    'timeZone': 'Europe/Rome',
-                },
-                'end' : {
-                    'dateTime': str(end_year) + '-' + "{:0>2d}".format(end_month) + '-' + "{:0>2d}".format(end_day) + 'T' + WORKTIME[shift]['end'] + '+02:00',
-                    'timeZone': 'Europe/Rome',
-                },
-            }
-            events.append(event)
+                
+                event = {
+                    'summary': shift,
+                    'start': {
+                        'dateTime': str(year) + '-' + "{:0>2d}".format(month) + '-' + "{:0>2d}".format(day) + 'T' + WORKTIME[shift]['start'] + '+02:00',
+                        'timeZone': 'Europe/Rome',
+                    },
+                    'end' : {
+                        'dateTime': str(end_year) + '-' + "{:0>2d}".format(end_month) + '-' + "{:0>2d}".format(end_day) + 'T' + WORKTIME[shift]['end'] + '+02:00',
+                        'timeZone': 'Europe/Rome',
+                    },
+                }
+                events.append(event)
+
     return events
 
 def main():
@@ -134,13 +138,13 @@ def main():
         return
     # print(sys.argv)
 
-    # creds = auth()
-    # service = build('calendar', 'v3', credentials = creds)
+    creds = auth()
+    service = build('calendar', 'v3', credentials = creds)
 
     events = worksheet(inputFile, int(month), int(year))
 
-    # for event in events:
-    #    event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
+    for event in events:
+        event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
         # print('------------------')
         # print(event['summary'])
         # print(event['start']['dateTime'])
