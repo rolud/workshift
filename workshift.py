@@ -29,7 +29,7 @@ WORKTIME = {
     },
 }
 
-def auth():
+def authentication():
     creds = None
     # the file toke.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time
@@ -54,27 +54,24 @@ def worksheet(input, month, year):
     events = []
     workbook = xlrd.open_workbook(input)
     sheet = workbook.sheet_by_index(0)
-    daycell = -1
+    dayrow = -1 
     for row in range(sheet.nrows):
         cell = sheet.cell(row,0)
         if (cell.ctype == 1):
             if cell.value.upper() == 'COGNOME':
-                daycell = row
+                dayrow = row
             if cell.value.upper() == "SCARCELLA":
                 break
-    if daycell < 0: 
-        return
-    print(daycell, row)
+    if dayrow < 0: 
+        return None
+   
     for col in range(1,sheet.ncols):
-        day = int(sheet.cell(daycell,col).value)
-        # print("{:0>2d}".format(day),"{:0>2d}".format(month),year,sheet.cell(row,col).value)
-        # print(shift)        
+        day = int(sheet.cell(dayrow,col).value)
+
         if sheet.cell(row,col).value in SHIFT :
             shift = SHIFT[sheet.cell(row,col).value]
-            
             if shift in WORKTIME:
-                # print(col)
-                # print(sheet.cell(2,col).value, 'agosto 2019 -> ', SHIFT[sheet.cell(row,col).value])
+                # if it is the night shift, we need to handle the date change
                 if shift == 'Notte':
                     if ((month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10) and day == 31):
                         end_day = 1
@@ -122,7 +119,7 @@ def worksheet(input, month, year):
     return events
 
 def main():
-
+    # check command parameters
     if (len(sys.argv) != 6):
         print('Error! Usage: python workshift.py <input_file> -m <mm> -y <yyyy>')
         return
@@ -138,35 +135,18 @@ def main():
         return
     # print(sys.argv)
 
-    creds = auth()
+    creds = authentication()
     service = build('calendar', 'v3', credentials = creds)
 
     events = worksheet(inputFile, int(month), int(year))
 
-    for event in events:
-        event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
-        # print('------------------')
-        # print(event['summary'])
-        # print(event['start']['dateTime'])
-        # print(event['end']['dateTime'])
-
-    # event = {
-    #     'summary': 'Pomeriggio',
-    #     'start': {
-    #         'dateTime': '2019-08-19T15:00:00+02:00',
-    #         'timeZone': 'Europe/Rome',
-    #     },
-    #     'end': {
-    #         'dateTime': '2019-08-19T23:00:00+02:00',
-    #         'timeZone': 'Europe/Rome',
-    #     },
-    # }
-
-    # event = service.events().insert(calendarId='rr1g9ige1sm67rgqgv1ria19o4@group.calendar.google.com', body = event).execute()
-    # print('event created:')
-    # print(event.get('htmlLink'))
-
-
+    if events != None:
+        for event in events:
+            event = service.events().insert(calendarId=CALENDAR_ID, body = event).execute()
+            # print('------------------')
+            # print(event['summary'])
+            # print(event['start']['dateTime'])
+            # print(event['end']['dateTime'])
 
 
 if __name__ == '__main__':
