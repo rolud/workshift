@@ -1,4 +1,4 @@
-import datetime 
+from datetime import datetime
 import pickle
 import os.path
 import sys
@@ -106,14 +106,16 @@ def worksheet(input, month, year):
                 event = {
                     'summary': shift,
                     'start': {
-                        'dateTime': str(year) + '-' + "{:0>2d}".format(month) + '-' + "{:0>2d}".format(day) + 'T' + WORKTIME[shift]['start'] + '+02:00',
+                        'dateTime': str(year) + '-' + "{:0>2d}".format(month) + '-' + "{:0>2d}".format(day) + 'T' + WORKTIME[shift]['start'],
                         'timeZone': 'Europe/Rome',
                     },
                     'end' : {
-                        'dateTime': str(end_year) + '-' + "{:0>2d}".format(end_month) + '-' + "{:0>2d}".format(end_day) + 'T' + WORKTIME[shift]['end'] + '+02:00',
+                        'dateTime': str(end_year) + '-' + "{:0>2d}".format(end_month) + '-' + "{:0>2d}".format(end_day) + 'T' + WORKTIME[shift]['end'],
                         'timeZone': 'Europe/Rome',
                     },
                 }
+
+                
                 events.append(event)
 
     return events
