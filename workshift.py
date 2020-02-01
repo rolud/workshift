@@ -68,6 +68,7 @@ def worksheet(input, month, year):
     for col in range(1,sheet.ncols):
         day = int(sheet.cell(dayrow,col).value)
 
+
         if sheet.cell(row,col).value in SHIFT :
             shift = SHIFT[sheet.cell(row,col).value]
             if shift in WORKTIME:
@@ -85,7 +86,7 @@ def worksheet(input, month, year):
                         end_day = 1
                         end_month = month + 1
                         end_year = year
-                    elif (month == 2):
+                    elif (month == 2 and (day == 28 or day == 29)):
                         if (year % 4 == 0 and day == 29):
                             end_day = 1
                             end_month = month + 1
@@ -115,7 +116,6 @@ def worksheet(input, month, year):
                     },
                 }
 
-                
                 events.append(event)
 
     return events
